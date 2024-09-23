@@ -5,14 +5,19 @@ TOPO-Cobaya is a fork of Cobaya to cryptographically verify results of cosmologi
 *Using TOPO: Time-Ordered Provable Outputs*
 -------------------------------------------
 
+TOPO (Time-Ordered Provable Outputs) is a cryptographic protocol for verifying the 
+results of cosmological parameter inference. 
+Topo in Spanish is Mole, which gives the idea of blinding.
+
 
 :Authors: Santiago Casas, Christian Fidler
 
 .. image:: ./img/topo-cobaya.png 
    :alt: TOPO-Cobaya
+   :align: center
    :target: https://github.com/santiagocasas/topo-cobaya
-   :height: 250px
-   :width: 250px
+   :height: 420px
+   :width: 420px
 
 :TOPO-Cobaya Source: `TOPO-Cobaya at GitHub <https://github.com/santiagocasas/topo-cobaya>`_
 :TOPO Source: `TOPO code at GitHub <https://github.com/ChristianFidler/Topo>`_
