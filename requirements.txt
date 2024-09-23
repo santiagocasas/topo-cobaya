@@ -1,3 +1,37 @@
---index-url https://pypi.python.org/simple/
-
--e .
+certifi==2024.8.30
+charset-normalizer==3.3.2
+## classy==3.2.3 install classy in this environment through: git clone https://github.com/lesgourg/class_public.git && cd class_public && make 
+contourpy==1.3.0
+cycler==0.12.1
+Cython==3.0.8
+dill==0.3.8
+fonttools==4.53.1
+fuzzywuzzy==0.18.0
+getdist==1.5.2
+idna==3.8
+importlib-resources==6.4.4
+kiwisolver==1.4.7
+matplotlib==3.9.2
+numpy==1.23.2
+packaging==24.1
+pandas==2.2.2
+pillow==10.4.0
+planckpr4lensing==1.0.2
+portalocker==2.10.1
+Py-BOBYQA==1.4.1
+pyparsing==3.1.4
+PySide6==6.7.2
+PySide6-Addons==6.7.2
+PySide6-Essentials==6.7.2
+python-dateutil==2.9.0.post0
+pytz==2024.1
+PyYAML==6.0.2
+requests==2.32.3
+scipy==1.13.1
+shiboken6==6.7.2
+six==1.16.0
+tqdm==4.66.5
+tzdata==2024.1
+urllib3==2.2.2
+uv==0.4.8
+zipp==3.20.1
