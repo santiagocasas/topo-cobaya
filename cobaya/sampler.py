@@ -275,6 +275,7 @@ class Sampler(CobayaComponent):
                 output.delete_file_or_folder(self.progress_filename())
             except (OSError, TypeError):
                 pass
+        self.seed  = self.info()['seed']
         self._set_rng()
         self.initialize()
         model.set_cache_size(self._get_requested_cache_size())
@@ -331,6 +332,7 @@ class Sampler(CobayaComponent):
         # TODO: checkpointing save of self._rng.bit_generator.state per process
         if mpi.is_main_process():
             seed = getattr(self, "seed", None)
+            print("---->seed: ", seed)
             if seed is not None:
                 self.mpi_warning("This run has been SEEDED with seed %s", seed)
             ss = SeedSequence(seed)
