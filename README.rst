@@ -1,3 +1,50 @@
+**Topo-Cobaya** A fork of Cobaya to cryptographically verify results of cosmological inference
+==============================================================================================
+
+:Authors: Santiago Casas, Christian Fidler
+
+.. image:: ./img/topo-cobaya.png 
+   :alt: TOPO-Cobaya
+   :target: https://github.com/santiagocasas/topo-cobaya
+   :height: 250px
+   :width: 250px
+
+:TOPO-Cobaya Source: `TOPO-Cobaya at GitHub <https://github.com/santiagocasas/topo-cobaya>`_
+:TOPO Source: `TOPO code at GitHub <https://github.com/ChristianFidler/Topo>`_
+
+:Documentation: Same as Cobaya's documentation, see below.
+:TOPO Documentation: At TOPO's `Github <https://github.com/ChristianFidler/Topo>`_
+
+:Installation: Only development mode at the moment.
+
+               ``git clone https://github.com/santiagocasas/topo-cobaya.git``
+               
+               ``cd topo-cobaya``
+               
+               ## Create a new fresh environment and install dependencies
+
+               ``python -m venv topoenv python=3.9.5``
+
+               ``source topoenv/bin/activate``
+               
+               ``pip install -r requirements.txt``
+               
+               ``pip install -e .``
+
+:Cobaya cosmological installation:
+
+              ``cobaya-install cosmo -p cosmo/``
+
+:TOPO-Cobaya example likelihood installation:
+
+              ``cobaya-install --upgrade scripts/BAOs.yaml``
+
+:TOPO-Cobaya example likelihood run:
+
+              ``cobaya-run scripts/BAOs.yaml``
+
+
+
 *Cobaya*, a code for Bayesian analysis in Cosmology
 ===================================================
 
