@@ -116,3 +116,4 @@ sampler:
     # proposal_scale: 1.9
     covmat: auto
 force: True
+output: chains/BAOs
