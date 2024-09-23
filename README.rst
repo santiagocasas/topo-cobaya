@@ -1,9 +1,9 @@
 **TOPO-Cobaya**
 ===============
 TOPO-Cobaya is a fork of Cobaya to cryptographically verify results of cosmological inference
-###############################################################################################
+---------------------------------------------------------------------------------------------
 *Using TOPO: Time-Ordered Provable Outputs*
-########################################################################################
+-------------------------------------------
 
 
 :Authors: Santiago Casas, Christian Fidler
