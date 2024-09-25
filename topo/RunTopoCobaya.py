@@ -23,7 +23,7 @@ def main():
 
     # Load private key and derive public key
     try:
-        private_key = load_private_key("private_key.txt")
+        private_key = load_private_key("topo/cryptoFiles/private_key.txt")
     except FileNotFoundError:
         print("No private key found. You can run Keygen.py to create a keypair.")
         sys.exit(1)  # Exit the program with a non-zero status to indicate failure
@@ -82,19 +82,19 @@ def main():
 
 
     # Save yaml after modiufications and define canonical output 
-    input_yaml['output'] = f'Run_{pre_hash[:6]}_{ident[:6]}'
+    input_yaml['output'] = f'chains/Run_{pre_hash[:6]}_{ident[:6]}'
 
-    with open(f'../scripts/Run_{pre_hash[:6]}_{ident[:6]}.yaml', 'w') as file:
+    with open(f'scripts/Run_{pre_hash[:6]}_{ident[:6]}.yaml', 'w') as file:
         ordered_dump(input_yaml, file, default_flow_style=False)
 
     # Run Cobaya
-    command = ["cobaya-run", f"../scripts/Run_{pre_hash[:6]}_{ident[:6]}.yaml"]
+    command = ["cobaya-run", f"scripts/Run_{pre_hash[:6]}_{ident[:6]}.yaml"]
     command += extra_args
     cobaya = subprocess.run(command)
 
     # Process the output file to obtain Merkle roots
     output_file = input_yaml['output']
-    _, roots = process_file(f'../{output_file}.1.txt', skip=10, rounding=5)
+    _, roots = process_file(f'{output_file}.1.txt', skip=10, rounding=5)
 
     # Create the final proof object
     proof_object = {'roots': roots, 'data_hash': data_hash, 'seed': seed, 'Analysis_hash': pre_hash}
@@ -113,7 +113,7 @@ def main():
     print("\nAlso helpful for debugging the data:")
     print(data_dict)
     # Save proof object, signatures, and public key to JSON
-    save_proof_and_signatures_json(f'proof_object_{pre_hash[:6]}_{ident[:6]}.json', proof_object, signatureA, signatureB, public_key)
+    save_proof_and_signatures_json(f'topo/cryptoFiles/proof_object_{pre_hash[:6]}_{ident[:6]}.json', proof_object, signatureA, signatureB, public_key)
     print('Proof-object saved in JSON')
 
 if __name__ == "__main__":

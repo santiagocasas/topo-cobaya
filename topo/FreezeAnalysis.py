@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
     # Load private key and derive public key
     try:
-        private_key = load_private_key("private_key.txt")
+        private_key = load_private_key("topo/cryptoFiles/private_key.txt")
     except FileNotFoundError:
         print("No private key found. You can run Keygen.py to create a keypair.")
         sys.exit(1)  # Exit the program with a non-zero status to indicate failure
@@ -49,18 +49,12 @@ if __name__ == "__main__":
     print(f"Signature: {signature}")
     print(f"Testing Signature: {is_valid}")
 
-    print("\nIf not known publicly yet: publish")
-    print(f"Public Key: {public_key}")
-    print(f"Ethereum Address: {account.address}")
-
-    print("Please keep corresponding private key safe")
-
     print("\nPublish now, or later if code is still secret")
     print(f"The input file, and the git branch including the versions of installed theory codes")
     print(f"Those should match these hashes {pre_object}")
 
     # Save the pre-object and signatures to a JSON file
-    save_proof_and_signatures_json(f'pre_object_{pre_hash[:6]}.json', pre_object, signature, None, public_key)
+    save_proof_and_signatures_json(f'topo/cryptoFiles/pre_object_{pre_hash[:6]}.json', pre_object, signature, None, public_key)
     print('Pre-object saved in JSON')
 
 

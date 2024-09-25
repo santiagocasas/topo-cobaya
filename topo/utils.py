@@ -37,15 +37,28 @@ def generate_keys():
     private_key_bytes = os.urandom(32)
     private_key = keys.PrivateKey(private_key_bytes)
 
-    if os.path.exists("private_key.txt"):
+    if os.path.exists("topo/cryptoFiles/private_key.txt"):
         user_input = input("Key file already exists. Do you want to overwrite it? (yes/no): ").strip().lower()
         if user_input != 'yes':
             print("Aborting key generation to avoid overwriting.")
             return
 
-    with open("private_key.txt", "wb") as f:
+    with open("topo/private_key.txt", "wb") as f:
         f.write(private_key_bytes)
     print("Keys generated and saved to private_key.txt.")
+
+    public_key = private_key.public_key
+
+    # Generate account from private key (Ethereum address)
+    account = Account.from_key(private_key)
+
+
+    print("\nIf not known publicly yet: publish")
+    print(f"Public Key: {public_key}")
+    print(f"Ethereum Address: {account.address}")
+
+    print("Please keep corresponding private key safe")
+
 
 
 # File and directory hashing
@@ -139,7 +152,7 @@ def automatic_check(pre_hash, pre_object, public_key):
     Automatically verify the precommitted object and public key from stored JSON.
     """
     try:
-        pre_object_stored, _, _, public_key_stored = load_proof_and_signatures_json(f'pre_object_{pre_hash[:6]}.json')
+        pre_object_stored, _, _, public_key_stored = load_proof_and_signatures_json(f'topo/cryptoFiles/pre_object_{pre_hash[:6]}.json')
         if pre_object_stored == pre_object:
             print('Automatic check passed')
         else:
@@ -235,8 +248,8 @@ def remove_keys_recursive(data, exclude_keys):
 
 
 # Analysis functions
-def compute_analysis_hash(input_path):
-    git_hash = get_commit_hash()
+def compute_analysis_hash_old(input_path):
+    git_hash = get_commit_hash() 
     try:
         with open(input_path, 'r') as file:
             input_yaml = ordered_load(file)
@@ -275,18 +288,53 @@ def compute_analysis_hash(input_path):
     return pre_object, input_yaml
 
 
+
+# Analysis functions
+def compute_analysis_hash(input_path):
+    git_hash = get_commit_hash() 
+    try:
+        with open(input_path, 'r') as file:
+            input_yaml = ordered_load(file)
+    except FileNotFoundError:
+        print(f"Error: The file '{input_path}' was not found. Possibly your run does not correspond to a frozen analysis?")
+        sys.exit(1)
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        sys.exit(1)
+    exclude_keys = ["output", "likelihood", "seed"]
+    filtered_input = remove_keys_recursive(copy.deepcopy(input_yaml), exclude_keys)
+    input_hash = compute_sha256(str(filtered_input).encode()).hex()
+
+    code_hashes = {}
+    for theory in input_yaml['theory']:
+        if theory == 'classy':
+            theorypath = "/cosmo/code/classy/source"
+        elif theory == 'CAMB':
+            theorypath = '/cosmo/code/CAMB/fortran'
+        else:
+            print('theory not implemented yet. No verification')
+            theorypath = f"cobaya/theories/{theory}/{theory}"
+
+        package_hash = compute_directory_hash(os.path.dirname(theorypath))
+        
+        code_hashes[theory] = {'package hash': package_hash}
+
+    pre_object = {'git_hash': git_hash, 'input_hash': input_hash, 'code_hashes': code_hashes}
+    return pre_object, input_yaml
+
+
 def compute_data_dict(input_yaml):
-    data_dict = {}
+    data_dict = {'input_yaml_hash' : compute_sha256(str(input_yaml['likelihood']).encode()).hex()}
     for element in input_yaml['likelihood']:
         datapath = element.replace('.', '/')
-        with open(f'../cobaya/likelihoods/{datapath}.yaml', 'r') as file:
+        with open(f'cobaya/likelihoods/{datapath}.yaml', 'r') as file:
             data_yaml = yaml.safe_load(file)
 
         data_dict[element] = {'yaml_hash': compute_sha256(str(data_yaml).encode()).hex()}
 
         matches = find_specific_entries(data_yaml)
         for match in matches:
-            match_hash = compute_file_hash(f'../cosmo/data/{match}')
+            match_hash = compute_file_hash(f'cosmo/data/{match}')
             data_dict[element][match] = match_hash
 
     return data_dict

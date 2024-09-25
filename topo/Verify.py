@@ -62,13 +62,13 @@ def run_verification(pre_hash, ident, input_yaml, proof, extra_args):
     """
     # Prepare new YAML for verification
     new_yaml = copy.deepcopy(input_yaml)
-    new_yaml['output'] = f'Verification_{pre_hash[:6]}_{ident[:6]}'
+    new_yaml['output'] = f'chains/Verification_{pre_hash[:6]}_{ident[:6]}'
 
-    with open(f'../scripts/Verification_{pre_hash[:6]}_{ident[:6]}.yaml', 'w') as file:
+    with open(f'scripts/Verification_{pre_hash[:6]}_{ident[:6]}.yaml', 'w') as file:
         ordered_dump(new_yaml, file, default_flow_style=False)
 
     # Run the verification command
-    command = ["cobaya-run", f"../scripts/Verification_{pre_hash[:6]}_{ident[:6]}.yaml"]
+    command = ["cobaya-run", f"scripts/Verification_{pre_hash[:6]}_{ident[:6]}.yaml"]
     command += extra_args
     cobaya = subprocess.Popen(command)
 
@@ -76,16 +76,22 @@ def run_verification(pre_hash, ident, input_yaml, proof, extra_args):
     while cobaya.poll() is None:
         print("Verification running...")
 
-        time.sleep(60)  # Check progress every minute
-        file_path = f"Verification_{pre_hash[:6]}_{ident[:6]}.1.txt"
+        time.sleep(90)  # Check progress every minute
+        file_path = f"chains/Verification_{pre_hash[:6]}_{ident[:6]}.1.txt"
         #print(file_path)
         if os.path.exists(file_path):
             new_level = process_file_and_verify_roots(file_path, proof['roots'], skip=10, rounding=5, current_level=current_level)
             if new_level > current_level:
                 current_level = new_level
                 print(f"Congratulations, your topology has reached level {current_level}!!!")
-                my_art = AsciiArt.from_image(f'level_{current_level}.png')
-                my_art.to_terminal(columns=100)
+                try:
+                    my_art = AsciiArt.from_image(f'topo/asciiart/level_{current_level}.png')
+                    my_art.to_terminal(columns=100)
+                except FileNotFoundError:
+                    print(f"Error: The file topo/asciiart/level_{current_level}.png was not found. If you want level-up immages put something there!")
+                except Exception as e:
+                    print(f"An unexpected error occurred: {e}")
+
 
     print('Reached full verification')
     process_file_and_verify_roots(f"Verification_{pre_hash[:6]}_{ident[:6]}.1.txt", proof['roots'], skip=10, rounding=5, full_verification=True)
@@ -121,7 +127,7 @@ if __name__ == "__main__":
 
     # Load the proof object, signatures, and public key
     try:
-        proof, signature_hex, signatureB, public_key_hex = load_proof_and_signatures_json(f"proof_object_{pre_hash[:6]}_{ident[:6]}.json")
+        proof, signature_hex, signatureB, public_key_hex = load_proof_and_signatures_json(f"topo/cryptoFiles/proof_object_{pre_hash[:6]}_{ident[:6]}.json")
     except FileNotFoundError:
         print("Error: Proof object file not found. Exiting.")
         run_code = False

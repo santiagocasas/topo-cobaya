@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     # Load private key and derive public key
     try:
-        private_key = load_private_key("private_key.txt")
+        private_key = load_private_key("topo/cryptoFiles/private_key.txt")
     except FileNotFoundError:
         print("No private key found. You can run Keygen.py to create a keypair.")
         sys.exit(1)  # Exit the program with a non-zero status to indicate failure
@@ -74,6 +74,6 @@ if __name__ == "__main__":
     print("\nAlso helpful for debugging the data:")
     print(data_dict)
     # Save proof object, signatures, and public key to JSON
-    save_proof_and_signatures_json(f'proof_object_{pre_hash[:6]}_{ident[:6]}.json', proof_object, signatureA, signatureB, public_key)
+    save_proof_and_signatures_json(f'topo/cryptoFiles/proof_object_{pre_hash[:6]}_{ident[:6]}.json', proof_object, signatureA, signatureB, public_key)
     print('Proof-object saved in JSON')
 
