@@ -37,21 +37,22 @@ def generate_keys():
     private_key_bytes = os.urandom(32)
     private_key = keys.PrivateKey(private_key_bytes)
 
-    if os.path.exists("topo/cryptoFiles/private_key.txt"):
+    os.makedirs("topo/cryptoFiles", exist_ok=True)
+    key_path = "topo/cryptoFiles/private_key.txt"
+    if os.path.exists(key_path):
         user_input = input("Key file already exists. Do you want to overwrite it? (yes/no): ").strip().lower()
         if user_input != 'yes':
             print("Aborting key generation to avoid overwriting.")
             return
 
-    with open("topo/private_key.txt", "wb") as f:
+    with open(key_path, "wb") as f:
         f.write(private_key_bytes)
-    print("Keys generated and saved to private_key.txt.")
+    print(f"Keys generated and saved to {key_path}.")
 
     public_key = private_key.public_key
 
     # Generate account from private key (Ethereum address)
     account = Account.from_key(private_key)
-
 
     print("\nIf not known publicly yet: publish")
     print(f"Public Key: {public_key}")
