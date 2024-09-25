@@ -62,22 +62,43 @@ def run_verification(pre_hash, ident, input_yaml, proof, extra_args):
     """
     # Prepare new YAML for verification
     new_yaml = copy.deepcopy(input_yaml)
-    new_yaml['output'] = f'chains/Verification_{pre_hash[:6]}_{ident[:6]}'
-
-    with open(f'scripts/Verification_{pre_hash[:6]}_{ident[:6]}.yaml', 'w') as file:
+    new_yaml['output'] = f'chains/Verification/{name}_{pre_hash[:6]}_{ident[:6]}'
+    os.makedirs("scripts/Verification", exist_ok=True)
+    
+    with open(f'scripts/Verification/{name}_{pre_hash[:6]}_{ident[:6]}.yaml', 'w') as file:
         ordered_dump(new_yaml, file, default_flow_style=False)
 
     # Run the verification command
-    command = ["cobaya-run", f"scripts/Verification_{pre_hash[:6]}_{ident[:6]}.yaml"]
+    command = ["cobaya-run", f"scripts/Verification/{name}_{pre_hash[:6]}_{ident[:6]}.yaml"]
     command += extra_args
     cobaya = subprocess.Popen(command)
 
     current_level = 0
-    while cobaya.poll() is None:
-        print("Verification running...")
+    time_spent = 0 
 
-        time.sleep(90)  # Check progress every minute
-        file_path = f"chains/Verification_{pre_hash[:6]}_{ident[:6]}.1.txt"
+    print("Verification running...")
+    time.sleep(10)
+    user_input = input(" How long should the verification run in minutes (Negative numbers mean open ended runs)?").strip().lower()
+
+    try:
+        # Convert the input to an integer
+        verification_time = int(user_input)
+        print(f"Verification will run for {verification_time} minutes.")
+        
+    except ValueError:
+        print("Invalid input. Please enter a valid integer. Running open end")
+        verification_time  = -1
+
+    verification_time *= 60
+    
+
+    while (cobaya.poll() is None) and ((time_spent < verification_time) or (verification_time < 0)):
+
+        time.sleep(89)  # Check progress every 89 seconds
+        time_spent += 89
+
+        output_file = new_yaml['output']
+        file_path = f"{output_file}.1.txt"
         #print(file_path)
         if os.path.exists(file_path):
             new_level = process_file_and_verify_roots(file_path, proof['roots'], skip=10, rounding=5, current_level=current_level)
@@ -91,16 +112,44 @@ def run_verification(pre_hash, ident, input_yaml, proof, extra_args):
                     print(f"Error: The file topo/asciiart/level_{current_level}.png was not found. If you want level-up immages put something there!")
                 except Exception as e:
                     print(f"An unexpected error occurred: {e}")
+            elif new_level == 0:
+                print("Verification chain not found!")
+            elif new_level == -1:
+                print("Verification failed! Stoppoing cobaya! ")
+                cobaya.terminate()  # Use terminate to allow for a graceful shutdown
 
+                try:
+                    my_art = AsciiArt.from_image(f'topo/asciiart/dead.png')
+                    my_art.to_terminal(columns=100)
+                except FileNotFoundError:
+                    print(f"Error: The file topo/asciiart/dead.png was not found. If you want level-up immages put something there!")
+                except Exception as e:
+                    print(f"An unexpected error occurred: {e}")
+            
+                return
+            elif new_level == -99:
+                print("Full Verfiication completed! Stoppoing cobaya! ")
+                cobaya.terminate()  # Use terminate to allow for a graceful shutdown
 
-    print('Reached full verification')
-    process_file_and_verify_roots(f"Verification_{pre_hash[:6]}_{ident[:6]}.1.txt", proof['roots'], skip=10, rounding=5, full_verification=True)
+                try:
+                    my_art = AsciiArt.from_image(f'topo/asciiart/victory.png')
+                    my_art.to_terminal(columns=100)
+                except FileNotFoundError:
+                    print(f"Error: The file topo/asciiart/victory.png was not found. If you want level-up immages put something there!")
+                except Exception as e:
+                    print(f"An unexpected error occurred: {e}")
+            
+                return
+    cobaya.terminate()
 
 
 if __name__ == "__main__":
 
     try:    
         input_path = sys.argv[1]  # First argument is expected to be the input file path
+        name = os.path.splitext(os.path.basename(input_path))[0]
+        name = name.split('_', 1)[0]
+
     except IndexError:
         print("Please specify the location of the input file.")
         sys.exit(1)  # Exit with a non-zero status to indicate an error

@@ -14,6 +14,9 @@ def main():
 
     try:    
         input_path = sys.argv[1]  # First argument is expected to be the input file path
+        
+        name = os.path.splitext(os.path.basename(input_path))[0]
+
     except IndexError:
         print("Please specify the location of the input file.")
         sys.exit(1)  # Exit with a non-zero status to indicate an error
@@ -53,7 +56,7 @@ def main():
     # Create a unique identifier for this run
     ident = compute_sha256(str([data_hash,seed]).encode()).hex()
     # Try to see if this has already been used and finalized as proof
-    proof_path = f'proof_object_{pre_hash[:6]}_{ident[:6]}.json'
+    proof_path = f'topo/cryptoFiles/proof_object_{pre_hash[:6]}_{ident[:6]}.json'
 
     if os.path.exists(proof_path):
         user_input = input(
@@ -82,13 +85,13 @@ def main():
 
 
     # Save yaml after modiufications and define canonical output 
-    input_yaml['output'] = f'chains/Run_{pre_hash[:6]}_{ident[:6]}'
+    input_yaml['output'] = input_yaml['output'] + f'_{pre_hash[:6]}_{ident[:6]}'
 
-    with open(f'scripts/Run_{pre_hash[:6]}_{ident[:6]}.yaml', 'w') as file:
+    with open(f'scripts/{name}_{pre_hash[:6]}_{ident[:6]}.yaml', 'w') as file:
         ordered_dump(input_yaml, file, default_flow_style=False)
 
     # Run Cobaya
-    command = ["cobaya-run", f"scripts/Run_{pre_hash[:6]}_{ident[:6]}.yaml"]
+    command = ["cobaya-run", f"scripts/{name}_{pre_hash[:6]}_{ident[:6]}.yaml"]
     command += extra_args
     cobaya = subprocess.run(command)
 

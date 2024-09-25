@@ -28,16 +28,14 @@ def is_power_of_two(n):
 
 # Key management
 def load_private_key(file_path):
-    with open(file_path, "rb") as f:
-        private_key_bytes = f.read()
-    return keys.PrivateKey(private_key_bytes)
+    with open(file_path, "r") as f:
+        private_key_hex = f.read()
+    return keys.PrivateKey(bytes.fromhex(private_key_hex[2:]))
 
-
-def generate_keys():
-    private_key_bytes = os.urandom(32)
-    private_key = keys.PrivateKey(private_key_bytes)
+def save_private_key(private_key):
 
     os.makedirs("topo/cryptoFiles", exist_ok=True)
+    
     key_path = "topo/cryptoFiles/private_key.txt"
     if os.path.exists(key_path):
         user_input = input("Key file already exists. Do you want to overwrite it? (yes/no): ").strip().lower()
@@ -45,20 +43,15 @@ def generate_keys():
             print("Aborting key generation to avoid overwriting.")
             return
 
-    with open(key_path, "wb") as f:
-        f.write(private_key_bytes)
+    with open(key_path, "w") as f:
+        f.write(str(private_key.to_hex()))
     print(f"Keys generated and saved to {key_path}.")
 
-    public_key = private_key.public_key
+def generate_keys():
+    private_key_bytes = os.urandom(32)
+    private_key = keys.PrivateKey(private_key_bytes)
 
-    # Generate account from private key (Ethereum address)
-    account = Account.from_key(private_key)
-
-    print("\nIf not known publicly yet: publish")
-    print(f"Public Key: {public_key}")
-    print(f"Ethereum Address: {account.address}")
-
-    print("Please keep corresponding private key safe")
+    return private_key
 
 
 
@@ -157,17 +150,17 @@ def automatic_check(pre_hash, pre_object, public_key):
         if pre_object_stored == pre_object:
             print('Automatic check passed')
         else:
-            print('Automatic check failed. Precommitted values do not match. Please investigate.')
+            print('Automatic check failed. Precommitted values do not match. Please investigate further.')
         
         if public_key_stored != str(public_key):
             print('Public keys do not match. Please check.')
     except FileNotFoundError:
-        print("No automatic check performed. Please check manually.")
+        print("No corresponding frozen analysis found. Please check manually. Also consider running FreezeAnalysis.py to generate one now for future use!")
     except Exception as e:
         print(f"Error during automatic check: {e}")
 
 
-def process_file_and_verify_roots(file_path, proof_roots, skip=10, rounding=5, full_verification=False, current_level=1):
+def process_file_and_verify_roots(file_path, proof_roots, skip=10, rounding=5, current_level=1):
     tree = MerkleTree(hash_type='sha256')
     level = 1
     with open(file_path, 'r') as f:
@@ -175,20 +168,23 @@ def process_file_and_verify_roots(file_path, proof_roots, skip=10, rounding=5, f
             if i % skip == 0:
                 rounded_numbers = [round(float(num), rounding) for num in line.strip().split()]
                 tree.append_entry(str(rounded_numbers).encode())
+                #did we reach the top? 
+                if tree.get_state().hex() == proof_roots[-1]:
+                    print('reached root of merkle tree')
+                    print('Full verification passed')
+                    return -99
+
                 if is_power_of_two(tree.get_size()):
                     root_hash = tree.get_state().hex()
+                    #print(root_hash)
+                    #print(proof_roots)
                     if root_hash in proof_roots:
                         if level >= current_level:
                             print(f'Verification passed at level {level}')
                         level += 1
                     else:
                         print('Verification failed')
-    if full_verification and not is_power_of_two(tree.get_size()):
-        root_hash = tree.get_state().hex()
-        if root_hash in proof_roots:
-            print('Full verification passed')
-        else:
-            print('Verification failed')
+                        return -1
     return level -1 
 
 
