@@ -60,12 +60,17 @@ def save_private_key(private_key):
     user_input = input("Do you want to store your key encrypted? (yes/no): ").strip().lower()
     if user_input == 'yes':
         password = getpass.getpass("Please enter password: ")
-        encrypted_key = Account.encrypt(private_key, password)
-        key_path = "topo/cryptoFiles/encrypted_key.json"
-        with open(key_path, "w") as f:
-            json.dump(encrypted_key, f)
-        print(f"Encrypted key saved to {key_path}")
-
+        password2 = getpass.getpass("Reenter password: ")
+        if password == password2: 
+        
+            encrypted_key = Account.encrypt(private_key, password)
+            key_path = "topo/cryptoFiles/encrypted_key.json"
+            with open(key_path, "w") as f:
+                json.dump(encrypted_key, f)
+            print(f"Encrypted key saved to {key_path}")
+        else: 
+            print("Passwords dont match")
+            sys.exit(1)
 
 
         
