@@ -13,6 +13,7 @@ import sys
 import copy
 from collections import OrderedDict
 import importlib.util
+import getpass
 
 
 # Utility functions
@@ -28,24 +29,58 @@ def is_power_of_two(n):
 
 # Key management
 def load_private_key(file_path):
-    with open(file_path, "r") as f:
-        private_key_hex = f.read()
-    return keys.PrivateKey(bytes.fromhex(private_key_hex[2:]))
+
+    if file_path.endswith(".txt"):
+        
+        with open(file_path, "r") as f:
+            private_key_hex = f.read()
+        return keys.PrivateKey(bytes.fromhex(private_key_hex[2:]))
+    
+    else:
+        with open(file_path, 'r') as f:
+            encrypted_key = json.load(f)
+
+        password = getpass.getpass("Please enter the password to decrypt the private key: ")
+        try:
+            decrypted_private_key = Account.decrypt(encrypted_key, password)
+            print("Decryption successful.")
+            return keys.PrivateKey(decrypted_private_key)
+    
+        except ValueError:
+            print("Incorrect password or failed to decrypt the key.")
+            sys.exit(1)
+
+
 
 def save_private_key(private_key):
 
     os.makedirs("topo/cryptoFiles", exist_ok=True)
-    
-    key_path = "topo/cryptoFiles/private_key.txt"
-    if os.path.exists(key_path):
-        user_input = input("Key file already exists. Do you want to overwrite it? (yes/no): ").strip().lower()
-        if user_input != 'yes':
-            print("Aborting key generation to avoid overwriting.")
-            return
+        
 
-    with open(key_path, "w") as f:
-        f.write(str(private_key.to_hex()))
-    print(f"Keys generated and saved to {key_path}.")
+    user_input = input("Do you want to store your key encrypted? (yes/no): ").strip().lower()
+    if user_input == 'yes':
+        password = getpass.getpass("Please enter password: ")
+        encrypted_key = Account.encrypt(private_key, password)
+        key_path = "topo/cryptoFiles/encrypted_key.json"
+        with open(key_path, "w") as f:
+            json.dump(encrypted_key, f)
+        print(f"Encrypted key saved to {key_path}")
+
+
+
+        
+    else: # store in plain .txt
+    
+        key_path = "topo/cryptoFiles/private_key.txt"
+        if os.path.exists(key_path):
+            user_input = input("Key file already exists. Do you want to overwrite it? (yes/no): ").strip().lower()
+            if user_input != 'yes':
+                print("Aborting key generation to avoid overwriting.")
+                return
+
+        with open(key_path, "w") as f:
+            f.write(str(private_key.to_hex()))
+        print(f"Keys generated and saved to {key_path}.")
 
 def generate_keys():
     private_key_bytes = os.urandom(32)
@@ -160,38 +195,62 @@ def automatic_check(pre_hash, pre_object, public_key):
         print(f"Error during automatic check: {e}")
 
 
-def process_file_and_verify_roots(file_path, proof_roots, skip=10, rounding=5, current_level=1):
-    tree = MerkleTree(hash_type='sha256')
-    level = 1
+def print_in_red(text):
+    # ANSI escape code for red text: \033[31m
+    print(f"\033[31m{text}\033[0m")  # \033[0m resets the text to default color
+
+
+def process_file_and_verify_roots(file_path, proof_roots, skip=10, rounding=5, tree = None, position = 1, level = 1):
+    if tree == None:
+        tree = MerkleTree(hash_type='sha256')
+    
     with open(file_path, 'r') as f:
         for i, line in enumerate(f, start=1):
+            if i < position:
+                continue
             if i % skip == 0:
                 rounded_numbers = [round(float(num), rounding) for num in line.strip().split()]
                 tree.append_entry(str(rounded_numbers).encode())
                 #did we reach the top? 
                 if tree.get_state().hex() == proof_roots[-1]:
-                    print('reached root of merkle tree')
-                    print('Full verification passed')
-                    return -99
+                    #print('Full verification passed')
+                    return -99,tree,i
 
                 if is_power_of_two(tree.get_size()):
                     root_hash = tree.get_state().hex()
                     #print(root_hash)
                     #print(proof_roots)
                     if root_hash in proof_roots:
-                        if level >= current_level:
-                            print(f'Verification passed at level {level}')
+                        #if level >= current_level:
+                            #print(f'Verification passed at level {level}')
                         level += 1
                     else:
-                        print('Verification failed')
-                        return -1
-    return level -1 
+                        print_in_red('Verification failed!')
+                        return -1,tree,i
+    return level, tree, i  
 
 
 # Git and YAML handling
 def get_commit_hash():
     try:
         commit_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD']).strip().decode('utf-8')
+        return commit_hash
+    except subprocess.CalledProcessError as e:
+        return f"Error: {e}"
+
+
+def get_commit_hash_from_path(repo_path):
+    """
+    Get the latest git commit hash from the given repository path.
+    """
+    try:
+        # Check if the path is a valid git repository
+        if not os.path.isdir(os.path.join(repo_path, ".git")):
+            print(f"The directory {repo_path} is not a valid git repository.")
+            return None
+        
+        # Run the git command to get the latest commit hash
+        commit_hash = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo_path).strip().decode("utf-8")
         return commit_hash
     except subprocess.CalledProcessError as e:
         return f"Error: {e}"
@@ -287,7 +346,7 @@ def compute_analysis_hash_old(input_path):
 
 
 # Analysis functions
-def compute_analysis_hash(input_path):
+def compute_analysis_hash_olde(input_path):
     git_hash = get_commit_hash() 
     try:
         with open(input_path, 'r') as file:
@@ -315,6 +374,88 @@ def compute_analysis_hash(input_path):
         package_hash = compute_directory_hash(os.path.dirname(theorypath))
         
         code_hashes[theory] = {'package hash': package_hash}
+
+    pre_object = {'git_hash': git_hash, 'input_hash': input_hash, 'code_hashes': code_hashes}
+    return pre_object, input_yaml
+
+
+def load_json_if_present(extra_args):
+    """
+    Look for a .json file in extra args, and if found, load it.
+    """
+    for arg in extra_args:
+        if arg.endswith(".json"):
+            try:
+                with open(arg, 'r') as f:
+                    data = json.load(f)
+                    #print(f"Loaded JSON from {arg}")
+                    return data
+            except (FileNotFoundError, json.JSONDecodeError) as e:
+                print(f"Error loading JSON file {arg}: {e}")
+                return {}
+    return {}
+
+# Analysis functions
+def compute_analysis_hash(input_path,extra_args):
+
+    git_hash = get_commit_hash() 
+    try:
+        with open(input_path, 'r') as file:
+            input_yaml = ordered_load(file)
+    except FileNotFoundError:
+        print(f"Error: The file '{input_path}' was not found. Possibly your run does not correspond to a frozen analysis?")
+        sys.exit(1)
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        sys.exit(1)
+    exclude_keys = ["output", "likelihood", "seed"]
+    filtered_input = remove_keys_recursive(copy.deepcopy(input_yaml), exclude_keys)
+    input_hash = compute_sha256(str(filtered_input).encode()).hex()
+
+    json_data = load_json_if_present(extra_args)
+    git_path_theory = ''
+    git_hash_theory = ''
+    require_user_input = False
+
+    code_hashes = {}
+    for theory in input_yaml['theory']:
+
+        if theory in json_data:
+            if 'hash' in json_data[theory]:
+                git_hash_theory = json_data[theory]['hash']
+            elif 'path' in json_data[theory]:
+                git_path_theory = json_data[theory]['path']
+            else:
+                require_user_input = True
+        else:
+            require_user_input = True
+            # not found in data file
+        if require_user_input:
+            user_input = input(f"Do you want to enter a git repository path or a git hash for theory code {theory}? (Enter 'path' or 'hash'): ").strip().lower()
+
+            if user_input == 'path':
+                # Ask for the path to the git repository
+                git_path_theory = input("Please provide the path to the git repository: ").strip()
+                
+            elif user_input == 'hash':
+            # Ask the user for the git hash directly
+                git_hash_theory = input("Please provide the git hash: ").strip()
+                    
+            else:
+                print("Invalid option. Please enter 'path' or 'hash'.")
+                sys.exit(1)
+
+        
+        if git_path_theory != '':
+            git_hash_theory = get_commit_hash_from_path(git_path_theory)
+
+        if len(git_hash_theory) == 40:  # Simple check for valid SHA-1 hash length
+            
+            print_in_red(f"Obtained git hash for {theory}: {git_hash_theory}. Please verify that you are running this version")
+        else:
+            print("Invalid git hash.")
+            sys.exit(1)
+        code_hashes[theory] = git_hash_theory
 
     pre_object = {'git_hash': git_hash, 'input_hash': input_hash, 'code_hashes': code_hashes}
     return pre_object, input_yaml

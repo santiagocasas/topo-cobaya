@@ -6,6 +6,7 @@ from utils import (
     save_proof_and_signatures_json
 )
 import sys 
+import os
 
 if __name__ == "__main__":
     """
@@ -19,12 +20,16 @@ if __name__ == "__main__":
         sys.exit(1)  # Exit with a non-zero status to indicate an error
 
     # Collect any extra arguments beyond the input path
+    
     extra_args = sys.argv[2:]  
 
 
     # Load private key and derive public key
     try:
-        private_key = load_private_key("topo/cryptoFiles/private_key.txt")
+        if os.path.exists("topo/cryptoFiles/private_key.txt"):
+            private_key = load_private_key("topo/cryptoFiles/private_key.txt")
+        elif os.path.exists("topo/cryptoFiles/encrypted_key.json"):
+            private_key = load_private_key("topo/cryptoFiles/encrypted_key.json")
     except FileNotFoundError:
         print("No private key found. You can run Keygen.py to create a keypair.")
         sys.exit(1)  # Exit the program with a non-zero status to indicate failure
@@ -37,7 +42,7 @@ if __name__ == "__main__":
     account = Account.from_key(private_key)
 
     # Compute analysis hash and sign the pre-object
-    pre_object, _ = compute_analysis_hash(input_path)
+    pre_object, _ = compute_analysis_hash(input_path,extra_args)
     pre_hash, signature = sign_proof_object(private_key, pre_object)
 
     # Verify the signature
@@ -47,7 +52,7 @@ if __name__ == "__main__":
     print("\nInformation to publish with timestamp:")
     print(f"Analysis hash: {pre_hash}")
     print(f"Signature: {signature}")
-    print(f"Testing Signature: {is_valid}")
+    #print(f"Testing Signature: {is_valid}")
 
     print("\nPublish now, or later if code is still secret")
     print(f"The input file, and the git branch including the versions of installed theory codes")

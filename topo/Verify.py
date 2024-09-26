@@ -68,80 +68,136 @@ def run_verification(pre_hash, ident, input_yaml, proof, extra_args):
     with open(f'scripts/Verification/{name}_{pre_hash[:6]}_{ident[:6]}.yaml', 'w') as file:
         ordered_dump(new_yaml, file, default_flow_style=False)
 
-    # Run the verification command
-    command = ["cobaya-run", f"scripts/Verification/{name}_{pre_hash[:6]}_{ident[:6]}.yaml"]
-    command += extra_args
-    cobaya = subprocess.Popen(command)
+    # check if this was already run
+    output_file = new_yaml['output']
+    file_path = f"{output_file}.1.txt"
 
-    current_level = 0
-    time_spent = 0 
+    run_code = True
 
-    print("Verification running...")
-    time.sleep(10)
-    user_input = input(" How long should the verification run in minutes (Negative numbers mean open ended runs)?").strip().lower()
+    if os.path.exists(file_path):
+        user_input = input(
+            "This verification has already been run. Rerun with the same parameters? Enter (yes/no): "
+        ).strip().lower()
 
-    try:
-        # Convert the input to an integer
-        verification_time = int(user_input)
-        print(f"Verification will run for {verification_time} minutes.")
+        if user_input == 'no':
+            print("Proceeding with verification")
+            run_code = False
+        elif user_input == 'yes':
+            print("Rerunning with the same parameters.")
+    if run_code:
+        # Run the verification command
+        command = ["cobaya-run", f"scripts/Verification/{name}_{pre_hash[:6]}_{ident[:6]}.yaml"]
+        #command += extra_args
+        cobaya = subprocess.Popen(command)
+
+        print("Verification running...")
+
+        time.sleep(10)
+        user_input = input(" How long should the verification run in minutes (Negative numbers mean open ended runs)?").strip().lower()
+
+        try:
+            # Convert the input to an integer
+            verification_time = int(user_input)
+            print(f"Verification will run for {verification_time} minutes.")
+            
+        except ValueError:
+            print("Invalid input. Please enter a valid integer. Running open end")
+            verification_time  = -1
+
+        verification_time *= 60
+
+        current_level = 0
+        time_spent = 0  
+        i = 0
         
-    except ValueError:
-        print("Invalid input. Please enter a valid integer. Running open end")
-        verification_time  = -1
+        while (cobaya.poll() is None) and ((time_spent < verification_time) or (verification_time < 0)):
 
-    verification_time *= 60
-    
-
-    while (cobaya.poll() is None) and ((time_spent < verification_time) or (verification_time < 0)):
-
-        time.sleep(89)  # Check progress every 89 seconds
-        time_spent += 89
-
-        output_file = new_yaml['output']
-        file_path = f"{output_file}.1.txt"
-        #print(file_path)
-        if os.path.exists(file_path):
-            new_level = process_file_and_verify_roots(file_path, proof['roots'], skip=10, rounding=5, current_level=current_level)
-            if new_level > current_level:
-                current_level = new_level
-                print(f"Congratulations, your topology has reached level {current_level}!!!")
-                try:
-                    my_art = AsciiArt.from_image(f'topo/asciiart/level_{current_level}.png')
-                    my_art.to_terminal(columns=100)
-                except FileNotFoundError:
-                    print(f"Error: The file topo/asciiart/level_{current_level}.png was not found. If you want level-up immages put something there!")
-                except Exception as e:
-                    print(f"An unexpected error occurred: {e}")
-            elif new_level == 0:
-                print("Verification chain not found!")
-            elif new_level == -1:
-                print("Verification failed! Stoppoing cobaya! ")
-                cobaya.terminate()  # Use terminate to allow for a graceful shutdown
-
-                try:
-                    my_art = AsciiArt.from_image(f'topo/asciiart/dead.png')
-                    my_art.to_terminal(columns=100)
-                except FileNotFoundError:
-                    print(f"Error: The file topo/asciiart/dead.png was not found. If you want level-up immages put something there!")
-                except Exception as e:
-                    print(f"An unexpected error occurred: {e}")
+            time.sleep(89)  # Check progress every 89 seconds
+            time_spent += 89
             
-                return
-            elif new_level == -99:
-                print("Full Verfiication completed! Stoppoing cobaya! ")
-                cobaya.terminate()  # Use terminate to allow for a graceful shutdown
-
-                try:
-                    my_art = AsciiArt.from_image(f'topo/asciiart/victory.png')
-                    my_art.to_terminal(columns=100)
-                except FileNotFoundError:
-                    print(f"Error: The file topo/asciiart/victory.png was not found. If you want level-up immages put something there!")
-                except Exception as e:
-                    print(f"An unexpected error occurred: {e}")
             
-                return
-    cobaya.terminate()
+            #print(file_path)
+            if os.path.exists(file_path):
+                if i == 0:
+                    level, tree, i = process_file_and_verify_roots(file_path, proof['roots'], skip=10, rounding=5, level = 1)
+                else:
+                    level, tree, i = process_file_and_verify_roots(file_path, proof['roots'], skip=10, rounding=5,tree = tree, position = i+1, level = level)
+                
+                if level > current_level:
+                    current_level = level
+                    print(f"Congratulations, your topology has reached level {level-2}!!!")
+                    try:
+                        my_art = AsciiArt.from_image(f'topo/asciiart/level_{level-2}.png')
+                        my_art.to_terminal(columns=100)
+                    except FileNotFoundError:
+                        print(f"Error: The file topo/asciiart/level_{level-2}.png was not found. If you want level-up immages put something there!")
+                    except Exception as e:
+                        print(f"An unexpected error occurred: {e}")
+                elif level == 0:
+                    print("Verification chain not found!")
+                elif level == -1:
+                    print("Verification failed! Stoppoing cobaya! ")
+                    cobaya.terminate()  # Use terminate to allow for a graceful shutdown
 
+                    try:
+                        my_art = AsciiArt.from_image(f'topo/asciiart/dead.png')
+                        my_art.to_terminal(columns=100)
+                    except FileNotFoundError:
+                        print(f"Error: The file topo/asciiart/dead.png was not found. If you want level-up immages put something there!")
+                    except Exception as e:
+                        print(f"An unexpected error occurred: {e}")
+                
+                    return
+                elif level == -99:
+                    print("Full Verfiication completed! Stoppoing cobaya! ")
+                    cobaya.terminate()  # Use terminate to allow for a graceful shutdown
+
+                    try:
+                        my_art = AsciiArt.from_image(f'topo/asciiart/victory.png')
+                        my_art.to_terminal(columns=100)
+                    except FileNotFoundError:
+                        print(f"Error: The file topo/asciiart/victory.png was not found. If you want level-up immages put something there!")
+                    except Exception as e:
+                        print(f"An unexpected error occurred: {e}")
+                
+                    return
+        cobaya.terminate()
+    else: # not running the code
+        level, _,_ = process_file_and_verify_roots(file_path, proof['roots'], skip=10, rounding=5, level = 1)
+
+                
+        if level > 0:
+            print(f"Congratulations, your topology has reached level {level-2}!!!")
+            try:
+                my_art = AsciiArt.from_image(f'topo/asciiart/level_{level-2}.png')
+                my_art.to_terminal(columns=100)
+            except FileNotFoundError:
+                print(f"Error: The file topo/asciiart/level_{level-2}.png was not found. If you want level-up immages put something there!")
+            except Exception as e:
+                print(f"An unexpected error occurred: {e}")
+        elif level == -1:
+            print("Verification failed! ")
+            try:
+                my_art = AsciiArt.from_image(f'topo/asciiart/dead.png')
+                my_art.to_terminal(columns=100)
+            except FileNotFoundError:
+                print(f"Error: The file topo/asciiart/dead.png was not found. If you want level-up immages put something there!")
+            except Exception as e:
+                print(f"An unexpected error occurred: {e}")
+        
+            
+        elif level == -99:
+            print("Full Verfiication completed! ")
+            
+            try:
+                my_art = AsciiArt.from_image(f'topo/asciiart/victory.png')
+                my_art.to_terminal(columns=100)
+            except FileNotFoundError:
+                print(f"Error: The file topo/asciiart/victory.png was not found. If you want level-up immages put something there!")
+            except Exception as e:
+                print(f"An unexpected error occurred: {e}")
+        
+        
 
 if __name__ == "__main__":
 
@@ -162,7 +218,7 @@ if __name__ == "__main__":
     run_code = True
 
     # Compute analysis hash and pre-object
-    pre_object, input_yaml = compute_analysis_hash(input_path)
+    pre_object, input_yaml = compute_analysis_hash(input_path,extra_args)
     pre_hash = compute_sha256(str(pre_object).encode()).hex()
 
     # Compute data hashes and run identifier

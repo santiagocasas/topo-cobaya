@@ -5,6 +5,7 @@ from utils import (
     load_proof_and_signatures_json, process_file
 )
 import sys 
+import os
 
 
 # Main logic to generate proof after data analysis
@@ -22,7 +23,10 @@ if __name__ == "__main__":
 
     # Load private key and derive public key
     try:
-        private_key = load_private_key("topo/cryptoFiles/private_key.txt")
+        if os.path.exists("topo/cryptoFiles/private_key.txt"):
+            private_key = load_private_key("topo/cryptoFiles/private_key.txt")
+        elif os.path.exists("topo/cryptoFiles/encrypted_key.json"):
+            private_key = load_private_key("topo/cryptoFiles/encrypted_key.json")
     except FileNotFoundError:
         print("No private key found. You can run Keygen.py to create a keypair.")
         sys.exit(1)  # Exit the program with a non-zero status to indicate failure
@@ -33,7 +37,7 @@ if __name__ == "__main__":
     account = Account.from_key(private_key)
 
     # Compute analysis hash and sign pre-object
-    pre_object, input_yaml = compute_analysis_hash(input_path)
+    pre_object, input_yaml = compute_analysis_hash(input_path,extra_args)
     pre_hash, signatureA = sign_proof_object(private_key, pre_object)
 
     # Display precommitted hash and object for verification
@@ -54,7 +58,6 @@ if __name__ == "__main__":
 
     # Process the output file to obtain Merkle roots
     output_file = input_yaml['output']
-    print(output_file)
     _, roots = process_file(f'{output_file}.1.txt', skip=10, rounding=5)
 
     # Create the final proof object
@@ -69,10 +72,10 @@ if __name__ == "__main__":
     print("\nPublish all of the following:")
     print(f"Committed main hash: {H_output}")
     print(f"Proof object: {proof_object}")
-    print(f"Signature valid: {is_valid}")
+    #print(f"Signature valid: {is_valid}")
     print(f"Signature: {signatureB}")
-    print("\nAlso helpful for debugging the data:")
-    print(data_dict)
+    #print("\nAlso helpful for debugging the data:")
+    #print(data_dict)
     # Save proof object, signatures, and public key to JSON
     save_proof_and_signatures_json(f'topo/cryptoFiles/proof_object_{pre_hash[:6]}_{ident[:6]}.json', proof_object, signatureA, signatureB, public_key)
     print('Proof-object saved in JSON')
