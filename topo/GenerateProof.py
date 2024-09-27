@@ -6,20 +6,20 @@ from utils import (
 )
 import sys 
 import os
+import argparse
 
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Generate proof after data analysis.")
+    parser.add_argument("input_path", nargs="?", help="Path to the input file")
+    parser.add_argument("-p", "--path", help="Path to the input file (alternative to positional argument)")
+    return parser.parse_args()
 
-# Main logic to generate proof after data analysis
-if __name__ == "__main__":
-
-    try:    
-        input_path = sys.argv[1]  # First argument is expected to be the input file path
-    except IndexError:
-        print("Please specify the location of the input file.")
-        sys.exit(1)  # Exit with a non-zero status to indicate an error
-
-    # Collect any extra arguments beyond the input path
-    extra_args = sys.argv[2:]  
-
+def main(args):
+    # Determine input path
+    input_path = args.input_path or args.path
+    if not input_path:
+        print("Please specify the location of the input file using either a positional argument or -p/--path option.")
+        sys.exit(1)
 
     # Load private key and derive public key
     params = load_json_if_present(['topo/params.json'])
@@ -28,7 +28,7 @@ if __name__ == "__main__":
         private_key = load_private_key(params['key_path'])
     except FileNotFoundError:
         print(f"No private key found at {params['key_path']}. You can run Keygen.py to create a new keypair or update params.json to your keypath.")
-        sys.exit(1)  # Exit the program with a non-zero status to indicate failure
+        sys.exit(1)
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         sys.exit(1)
@@ -36,7 +36,7 @@ if __name__ == "__main__":
     account = Account.from_key(private_key)
 
     # Compute analysis hash and sign pre-object
-    pre_object, input_yaml = compute_analysis_hash(input_path,params)
+    pre_object, input_yaml = compute_analysis_hash(input_path, params)
     pre_hash, signatureA = sign_proof_object(private_key, pre_object)
 
     # Display precommitted hash and object for verification
@@ -71,11 +71,13 @@ if __name__ == "__main__":
     print("\nPublish all of the following:")
     print(f"Committed main hash: {H_output}")
     print(f"Proof object: {proof_object}")
-    #print(f"Signature valid: {is_valid}")
     print(f"Signature: {signatureB}")
-    #print("\nAlso helpful for debugging the data:")
-    #print(data_dict)
+
     # Save proof object, signatures, and public key to JSON
     save_proof_and_signatures_json(f'topo/cryptoFiles/proof_object_{pre_hash[:6]}_{ident[:6]}.json', proof_object, signatureA, signatureB, public_key)
     print('Proof-object saved in JSON')
+
+if __name__ == "__main__":
+    args = parse_arguments()
+    main(args)
 
