@@ -65,6 +65,16 @@ def save_private_key(private_key):
         
             encrypted_key = Account.encrypt(private_key, password)
             key_path = "topo/cryptoFiles/encrypted_key.json"
+
+            base, extension = os.path.splitext(key_path)
+            counter = 1
+        
+            # Keep adding a number to the base name until a unique path is found
+            while os.path.exists(f"{base}_{counter}{extension}"):
+                counter += 1 
+
+            key_path = f"{base}_{counter}{extension}"
+
             with open(key_path, "w") as f:
                 json.dump(encrypted_key, f)
             print(f"Encrypted key saved to {key_path}")
@@ -77,15 +87,26 @@ def save_private_key(private_key):
     else: # store in plain .txt
     
         key_path = "topo/cryptoFiles/private_key.txt"
-        if os.path.exists(key_path):
-            user_input = input("Key file already exists. Do you want to overwrite it? (yes/no): ").strip().lower()
-            if user_input != 'yes':
-                print("Aborting key generation to avoid overwriting.")
-                return
+        base, extension = os.path.splitext(key_path)
+        counter = 1
+    
+        # Keep adding a number to the base name until a unique path is found
+        while os.path.exists(f"{base}_{counter}{extension}"):
+            counter += 1 
+
+        key_path = f"{base}_{counter}{extension}"
 
         with open(key_path, "w") as f:
             f.write(str(private_key.to_hex()))
         print(f"Keys generated and saved to {key_path}.")
+    
+    params = load_json_if_present(['topo/params.json'])
+    params['key_path'] = key_path
+    #print(params)
+    with open('topo/params.json', 'w') as f:
+        json.dump(params, f, indent=4)
+    
+  
 
 def generate_keys():
     private_key_bytes = os.urandom(32)
@@ -401,7 +422,7 @@ def load_json_if_present(extra_args):
     return {}
 
 # Analysis functions
-def compute_analysis_hash(input_path,extra_args):
+def compute_analysis_hash(input_path,params):
 
     git_hash = get_commit_hash() 
     try:
@@ -413,54 +434,65 @@ def compute_analysis_hash(input_path,extra_args):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         sys.exit(1)
+
+    if 'sampler' not in input_yaml:
+        print("no sampler found in input_yaml!")
+        sys.exit(1)
+    if 'mcmc' not in input_yaml['sampler']:
+        print('ananlysis is not running mcmc. Sampler not implemented yet')
+        sys.exit(1)   
     exclude_keys = ["output", "likelihood", "seed"]
     filtered_input = remove_keys_recursive(copy.deepcopy(input_yaml), exclude_keys)
     input_hash = compute_sha256(str(filtered_input).encode()).hex()
 
-    json_data = load_json_if_present(extra_args)
+
+
+    json_data = load_json_if_present([params['code_versions']])
     git_path_theory = ''
     git_hash_theory = ''
     require_user_input = False
 
     code_hashes = {}
-    for theory in input_yaml['theory']:
+    if 'theory' in input_yaml:
+        for theory in input_yaml['theory']:
 
-        if theory in json_data:
-            if 'hash' in json_data[theory]:
-                git_hash_theory = json_data[theory]['hash']
-            elif 'path' in json_data[theory]:
-                git_path_theory = json_data[theory]['path']
+            if theory in json_data:
+                if 'hash' in json_data[theory]:
+                    git_hash_theory = json_data[theory]['hash']
+                elif 'path' in json_data[theory]:
+                    git_path_theory = json_data[theory]['path']
+                else:
+                    require_user_input = True
             else:
                 require_user_input = True
-        else:
-            require_user_input = True
-            # not found in data file
-        if require_user_input:
-            user_input = input(f"Do you want to enter a git repository path or a git hash for theory code {theory}? (Enter 'path' or 'hash'): ").strip().lower()
+                # not found in data file
+            if require_user_input:
+                user_input = input(f"Do you want to enter a git repository path or a git hash for theory code {theory}? (Enter 'path' or 'hash'): ").strip().lower()
 
-            if user_input == 'path':
-                # Ask for the path to the git repository
-                git_path_theory = input("Please provide the path to the git repository: ").strip()
-                
-            elif user_input == 'hash':
-            # Ask the user for the git hash directly
-                git_hash_theory = input("Please provide the git hash: ").strip()
+                if user_input == 'path':
+                    # Ask for the path to the git repository
+                    git_path_theory = input("Please provide the path to the git repository: ").strip()
                     
-            else:
-                print("Invalid option. Please enter 'path' or 'hash'.")
-                sys.exit(1)
+                elif user_input == 'hash':
+                # Ask the user for the git hash directly
+                    git_hash_theory = input("Please provide the git hash: ").strip()
+                        
+                else:
+                    print("Invalid option. Please enter 'path' or 'hash'.")
+                    sys.exit(1)
 
-        
-        if git_path_theory != '':
-            git_hash_theory = get_commit_hash_from_path(git_path_theory)
-
-        if len(git_hash_theory) == 40:  # Simple check for valid SHA-1 hash length
             
-            print_in_red(f"Obtained git hash for {theory}: {git_hash_theory}. Please verify that you are running this version")
-        else:
-            print("Invalid git hash.")
-            sys.exit(1)
-        code_hashes[theory] = git_hash_theory
+            if git_path_theory != '':
+                git_hash_theory = get_commit_hash_from_path(git_path_theory)
+
+            if len(git_hash_theory) == 40:  # Simple check for valid SHA-1 hash length
+                
+                print_in_red(f"Obtained git hash for {theory}: {git_hash_theory} possibly from code_versions.json. Please make sure this is up to date and agrees with the verison you are running")
+            else:
+                print("Invalid git hash.")
+                sys.exit(1)
+            code_hashes[theory] = git_hash_theory    
+    
 
     pre_object = {'git_hash': git_hash, 'input_hash': input_hash, 'code_hashes': code_hashes}
     return pre_object, input_yaml
@@ -470,14 +502,16 @@ def compute_data_dict(input_yaml):
     data_dict = {'input_yaml_hash' : compute_sha256(str(input_yaml['likelihood']).encode()).hex()}
     for element in input_yaml['likelihood']:
         datapath = element.replace('.', '/')
-        with open(f'cobaya/likelihoods/{datapath}.yaml', 'r') as file:
-            data_yaml = yaml.safe_load(file)
-
+        try:
+            with open(f'cobaya/likelihoods/{datapath}.yaml', 'r') as file:
+                data_yaml = yaml.safe_load(file)
+        except: # no data exisits for this likelihood
+            data_yaml = ''
         data_dict[element] = {'yaml_hash': compute_sha256(str(data_yaml).encode()).hex()}
 
         matches = find_specific_entries(data_yaml)
         for match in matches:
             match_hash = compute_file_hash(f'cosmo/data/{match}')
             data_dict[element][match] = match_hash
-
+    #print(data_dict)
     return data_dict

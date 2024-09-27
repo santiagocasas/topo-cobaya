@@ -3,7 +3,8 @@ from utils import (
     load_private_key, compute_sha256,
     compute_analysis_hash,
     sign_proof_object,
-    save_proof_and_signatures_json
+    save_proof_and_signatures_json,
+    load_json_if_present
 )
 import sys
 import os
@@ -17,16 +18,13 @@ def parse_arguments():
 
 def main(args):
     # Load private key and derive public key
+
+    params = load_json_if_present(['topo/params.json'])
+    
     try:
-        if os.path.exists("topo/cryptoFiles/private_key.txt"):
-            private_key = load_private_key("topo/cryptoFiles/private_key.txt")
-        elif os.path.exists("topo/cryptoFiles/encrypted_key.json"):
-            private_key = load_private_key("topo/cryptoFiles/encrypted_key.json")
-        else:
-            print("No private key found. You can run Keygen.py to create a keypair.")
-            sys.exit(1)
+        private_key = load_private_key(params['key_path'])
     except FileNotFoundError:
-        print("No private key found. You can run Keygen.py to create a keypair.")
+        print(f"No private key found at {params['key_path']}. You can run Keygen.py to create a new keypair or update params.json to your keypath.")
         sys.exit(1)  # Exit the program with a non-zero status to indicate failure
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
@@ -37,7 +35,7 @@ def main(args):
     account = Account.from_key(private_key)
 
     # Compute analysis hash and sign the pre-object
-    pre_object, _ = compute_analysis_hash(args.input_path, args.extra_args)
+    pre_object, _ = compute_analysis_hash(args.input_path, params)
     pre_hash, signature = sign_proof_object(private_key, pre_object)
 
     # Verify the signature

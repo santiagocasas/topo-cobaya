@@ -1,8 +1,10 @@
-from utils import generate_keys, save_private_key, load_private_key
+from utils import generate_keys, save_private_key, load_private_key, load_json_if_present
 
 from eth_keys import keys
 from eth_account import Account
 import sys
+import json
+
 
 # Run this to generate some keys
 
@@ -17,6 +19,11 @@ if __name__ == "__main__":
         
         try:
             private_key = load_private_key(key_path)
+            params = load_json_if_present(['topo/params.json'])
+            params['key_path'] = key_path
+            with open('topo/params.json', 'w') as f:
+                json.dump(params, f, indent=4)
+    
             
         except FileNotFoundError:
             print(f"Error: The private key file '{key_path}' was not found.")
@@ -24,17 +31,19 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"An error occurred while loading the private key: {e}")
             sys.exit(1)
+
+        
     
     elif user_input == 'no':
         # Generate a new private key
         print("Generating a new private key...")
         private_key = generate_keys()
+        save_private_key( private_key)
+
 
     else:
         print("Invalid input. Please enter 'yes' or 'no'.")
         sys.exit(1)
-
-    save_private_key( private_key)
 
     # Derive the public key and Ethereum account from the private key
     public_key = private_key.public_key

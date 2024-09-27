@@ -2,7 +2,7 @@ from eth_account import Account
 from utils import (
     save_proof_and_signatures_json, load_private_key, compute_analysis_hash,
     compute_data_dict, compute_sha256, sign_proof_object, automatic_check,
-    load_proof_and_signatures_json, process_file
+    load_proof_and_signatures_json, process_file, load_json_if_present
 )
 import sys 
 import os
@@ -22,13 +22,12 @@ if __name__ == "__main__":
 
 
     # Load private key and derive public key
+    params = load_json_if_present(['topo/params.json'])
+    
     try:
-        if os.path.exists("topo/cryptoFiles/private_key.txt"):
-            private_key = load_private_key("topo/cryptoFiles/private_key.txt")
-        elif os.path.exists("topo/cryptoFiles/encrypted_key.json"):
-            private_key = load_private_key("topo/cryptoFiles/encrypted_key.json")
+        private_key = load_private_key(params['key_path'])
     except FileNotFoundError:
-        print("No private key found. You can run Keygen.py to create a keypair.")
+        print(f"No private key found at {params['key_path']}. You can run Keygen.py to create a new keypair or update params.json to your keypath.")
         sys.exit(1)  # Exit the program with a non-zero status to indicate failure
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
@@ -37,7 +36,7 @@ if __name__ == "__main__":
     account = Account.from_key(private_key)
 
     # Compute analysis hash and sign pre-object
-    pre_object, input_yaml = compute_analysis_hash(input_path,extra_args)
+    pre_object, input_yaml = compute_analysis_hash(input_path,params)
     pre_hash, signatureA = sign_proof_object(private_key, pre_object)
 
     # Display precommitted hash and object for verification
@@ -58,10 +57,10 @@ if __name__ == "__main__":
 
     # Process the output file to obtain Merkle roots
     output_file = input_yaml['output']
-    _, roots = process_file(f'{output_file}.1.txt', skip=10, rounding=5)
+    _, roots = process_file(f'{output_file}.1.txt', skip=params['skip'], rounding=params['round'])
 
     # Create the final proof object
-    proof_object = {'roots': roots, 'data_hash': data_hash, 'seed': seed, 'Analysis_hash': pre_hash}
+    proof_object = {'roots': roots, 'data_hash': data_hash, 'seed': seed, 'skip': params['skip'], 'round': params['round'], 'Analysis_hash': pre_hash}
     
     # Sign the final proof object
     H_output, signatureB = sign_proof_object(private_key, proof_object)
