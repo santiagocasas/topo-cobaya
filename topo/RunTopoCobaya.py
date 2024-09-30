@@ -1,9 +1,12 @@
 from eth_account import Account
-from utils import (
-    save_proof_and_signatures_json, load_private_key, compute_analysis_hash,
-    compute_data_dict, compute_sha256, sign_proof_object, automatic_check,
-    load_proof_and_signatures_json, process_file,ordered_dump,load_json_if_present
+
+from basic_cryptography import (
+    load_private_key, compute_sha256, sign_proof_object,
 )
+from basic_utility import (
+    save_proof_and_signatures_json, load_proof_and_signatures_json, load_json, ordered_dump
+)
+from analysis import compute_analysis_hash, compute_data_dict, automatic_check, process_file
 import os
 import subprocess
 import sys
@@ -25,7 +28,7 @@ def main():
     extra_args = sys.argv[2:]  
 
     # Load private key and derive public key
-    params = load_json_if_present(['topo/params.json'])
+    params = load_json('topo/params.json')
     
     try:
         private_key = load_private_key(params['key_path'])
@@ -99,6 +102,13 @@ def main():
 
     # Process the output file to obtain Merkle roots
     output_file = input_yaml['output']
+    if 'skip' not in params:
+        print_in_red("skip not found in params.json. Using default of 10.")
+        params['skip'] = 10
+    if 'round' not in params:
+        print_in_red("round not found in params.json. Using default of 5.")
+        params['round'] = 5
+     
     _, roots = process_file(f'{output_file}.1.txt', skip=params['skip'], rounding=params['round'])
 
     # Create the final proof object

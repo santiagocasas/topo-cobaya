@@ -1,11 +1,13 @@
 from eth_account import Account
-from utils import (
+
+from basic_cryptography import (
     load_private_key, compute_sha256,
-    compute_analysis_hash,
     sign_proof_object,
-    save_proof_and_signatures_json,
-    load_json_if_present
+    
 )
+from basic_utility import load_json, save_proof_and_signatures_json
+from analysis import compute_analysis_hash
+
 import sys
 import os
 import argparse
@@ -19,7 +21,7 @@ def parse_arguments():
 def main(args):
     # Load private key and derive public key
 
-    params = load_json_if_present(['topo/params.json'])
+    params = load_json('topo/params.json')
     
     try:
         private_key = load_private_key(params['key_path'])

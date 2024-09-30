@@ -1,8 +1,17 @@
-from utils import (
-    compute_sha256, get_commit_hash, compute_file_hash, compute_analysis_hash, 
-    compute_data_dict, process_file_and_verify_roots, load_proof_and_signatures_json, 
-    verify_committed_hash, verify_signature_hex, remove_keys_recursive, ordered_load, ordered_dump, load_json_if_present
+from basic_cryptography import (
+    compute_sha256, get_commit_hash, compute_file_hash, 
+    verify_committed_hash, verify_signature_hex,
 )
+from basic_utility import (
+    load_proof_and_signatures_json, print_in_red,
+    remove_keys_recursive, ordered_load, ordered_dump, load_json 
+)
+from analysis import (
+    get_commit_hash, compute_analysis_hash, 
+    compute_data_dict, process_file_and_verify_roots, 
+)
+
+
 from ascii_magic import AsciiArt
 import os
 import time
@@ -56,7 +65,7 @@ def verify_data(data_hash, input_yaml, proof):
         return False
 
 
-def run_verification(pre_hash, ident, input_yaml, proof, extra_args):
+def run_verification(pre_hash, ident, input_yaml, proof, params):
     """
     Executes the verification process and monitors the output in real-time.
     """
@@ -92,19 +101,13 @@ def run_verification(pre_hash, ident, input_yaml, proof, extra_args):
 
         print("Verification running...")
 
-        time.sleep(4)
-        user_input = input(" How long should the verification run in minutes (Negative numbers mean open ended runs)?").strip().lower()
-
-        try:
-            # Convert the input to an integer
-            verification_time = int(user_input)
-            print(f"Verification will run for {verification_time} minutes.")
-            
-        except ValueError:
-            print("Invalid input. Please enter a valid integer. Running open end")
-            verification_time  = -1
-
-        verification_time *= 60
+        time.sleep(10) # we need to sleep at least a bit to give cobaya some time to clean up old files
+        
+        if 'verification_time' in params:
+            verification_time = 60 * params['verification_time']
+        else:
+            print_in_red('no argument verification_time found in params.json. Running open ended.')
+            verification_time = -1
 
         current_level = 0
         time_spent = 0  
@@ -216,7 +219,7 @@ if __name__ == "__main__":
     # Collect any extra arguments beyond the input path
     extra_args = sys.argv[2:]  
 
-    params = load_json_if_present(['topo/params.json'])
+    params = load_json('topo/params.json')
     
 
     # Flag to control whether the code should be run after verifications
@@ -256,6 +259,6 @@ if __name__ == "__main__":
 
     # Step 4: If all verifications passed, proceed with running the analysis
     if run_code:
-        run_verification(pre_hash, ident, input_yaml, proof, extra_args)
+        run_verification(pre_hash, ident, input_yaml, proof, params)
     else:
         print('Verification failed: Process aborted.')

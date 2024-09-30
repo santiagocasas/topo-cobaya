@@ -1,4 +1,5 @@
-from utils import generate_keys, save_private_key, load_private_key, load_json_if_present
+from basic_cryptography import generate_keys, save_private_key, load_private_key
+from basic_utility import load_json
 
 from eth_keys import keys
 from eth_account import Account
@@ -11,7 +12,7 @@ import json
 if __name__ == "__main__":
 
 # Ask the user if they already have a private key
-    user_input = input("Do you already have a private key? (yes/no): ").strip().lower()
+    user_input = input("Do you wish to load an existing key? (yes/no): ").strip().lower()
 
     if user_input == 'yes':
         # Load an existing private key
@@ -19,7 +20,7 @@ if __name__ == "__main__":
         
         try:
             private_key = load_private_key(key_path)
-            params = load_json_if_present(['topo/params.json'])
+            params = load_json('topo/params.json')
             params['key_path'] = key_path
             with open('topo/params.json', 'w') as f:
                 json.dump(params, f, indent=4)
