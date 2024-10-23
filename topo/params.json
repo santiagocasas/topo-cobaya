@@ -1,5 +1,5 @@
 {
-    "key_path": "topo/cryptoFiles/encrypted_key_1.json",
+    "key_path": "topo/cryptoFiles/private_key_1.txt",
     "code_versions": {
         "classy": {
             "hash": "ae99bcea1cd94994228acdfaec70fa8628ae24c5"

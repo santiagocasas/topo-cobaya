@@ -2,12 +2,7 @@
 import argparse
 import sys
 import os
-
-# Add the parent directory of 'topo' to the Python path
-script_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(script_dir)
-sys.path.append(parent_dir)
-
+from topo import __version__ as topo_version
 from topo.FreezeAnalysis import main as freeze_main
 from topo.GenerateProof import main as proof_main
 from topo.Keygen import main as keygen_main
@@ -15,6 +10,7 @@ from topo.Verify import main as verify_main
 
 def main():
     parser = argparse.ArgumentParser(description="Topo-Cobaya CLI")
+    parser.add_argument('--version', action='version', version=f'Topo-Cobaya {topo_version}')
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
     
     # Keygen command

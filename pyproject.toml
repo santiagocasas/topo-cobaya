@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cobaya"
-dynamic = ["version"]
+dynamic = ["version", "version_topo"]
 authors = [
     { name = "Santiago Casas" },
     { name = "Christian Fidler" },
@@ -49,6 +49,7 @@ docs = [
 
 [tool.setuptools.dynamic]
 version = { attr = "cobaya.__version__" }
+version_topo = { attr = "topo.__version__" }
 
 [tool.setuptools.package-data]
 "*" = ["*.yaml", "*.bibtex"]
