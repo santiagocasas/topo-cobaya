@@ -1,3 +1,8 @@
+#TOPO-specific
+topo/cryptoFiles/*
+topo/asciiart/*
+topo/params.json
+
 # Backups
 *~
 \#*

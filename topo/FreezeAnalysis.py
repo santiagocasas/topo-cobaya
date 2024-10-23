@@ -1,22 +1,16 @@
 from eth_account import Account
 
-from basic_cryptography import (
+from .basic_cryptography import (
     load_private_key, compute_sha256,
     sign_proof_object,
     
 )
-from basic_utility import load_json, save_proof_and_signatures_json
-from analysis import compute_analysis_hash
+from .basic_utility import load_json, save_proof_and_signatures_json
+from .analysis import compute_analysis_hash
 
 import sys
 import os
 import argparse
-
-def parse_arguments():
-    parser = argparse.ArgumentParser(description="Generate and sign analysis hash for input file.")
-    parser.add_argument("input_path", help="Path to the cobaya input file for analysis. Example: scripts/my_input.yaml")
-    parser.add_argument("extra_args", nargs="*", help="Path to the code versions .json file that specifies the theory code used. Example: topo/code_versions.json")
-    return parser.parse_args()
 
 def main(args):
     # Load private key and derive public key
@@ -26,7 +20,7 @@ def main(args):
     try:
         private_key = load_private_key(params['key_path'])
     except FileNotFoundError:
-        print(f"No private key found at {params['key_path']}. You can run Keygen.py to create a new keypair or update params.json to your keypath.")
+        print(f"No private key found at {params['key_path']}. You can run Keygen.py to create a new keypair or update params.json to match your keypath.")
         sys.exit(1)  # Exit the program with a non-zero status to indicate failure
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
@@ -55,10 +49,17 @@ def main(args):
 
     # Save the pre-object and signatures to a JSON file
     save_proof_and_signatures_json(f'topo/cryptoFiles/pre_object_{pre_hash[:6]}.json', pre_object, signature, None, public_key)
-    print('Pre-object saved in JSON')
+    print(f'Pre-object saved in JSON format at topo/cryptoFiles/pre_object_{pre_hash[:6]}.json')
 
 if __name__ == "__main__":
-    args = parse_arguments()
+    parser = argparse.ArgumentParser(description="Generate and sign analysis hash for input file.")
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("input_path", nargs="?", help="Path to the cobaya input file for analysis. Example: scripts/my_input.yaml")
+    group.add_argument("-p", "--path", help="Alternative way to specify the path to the cobaya input file")
+    args = parser.parse_args()
+
+    # If --path is used, set input_path to its value
+    if args.path:
+        args.input_path = args.path
+
     main(args)
-
-

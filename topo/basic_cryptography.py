@@ -12,7 +12,7 @@ import yaml
 import sys
 import getpass
 
-from basic_utility import load_json
+from .basic_utility import load_json
 
 
 

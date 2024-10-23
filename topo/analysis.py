@@ -15,10 +15,10 @@ from collections import OrderedDict
 import importlib.util
 import getpass
 
-from basic_cryptography import (
+from .basic_cryptography import (
     get_commit_hash, compute_sha256, compute_file_hash
 )
-from basic_utility import (
+from .basic_utility import (
     ordered_load, remove_keys_recursive, print_in_red, find_specific_entries, is_power_of_two, load_proof_and_signatures_json
 )
 

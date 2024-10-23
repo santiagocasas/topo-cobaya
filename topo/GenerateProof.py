@@ -1,20 +1,13 @@
 from eth_account import Account
-from basic_cryptography import (
+from .basic_cryptography import (
     load_private_key, compute_sha256, sign_proof_object,
 )
-from basic_utility import (
-    save_proof_and_signatures_json, load_proof_and_signatures_json, load_json
+from .basic_utility import (
+    save_proof_and_signatures_json, print_in_red, load_json
 )
-from analysis import compute_analysis_hash, compute_data_dict, automatic_check, process_file
+from .analysis import compute_analysis_hash, compute_data_dict, automatic_check, process_file
 import sys 
-import os
 import argparse
-
-def parse_arguments():
-    parser = argparse.ArgumentParser(description="Generate proof after data analysis.")
-    parser.add_argument("input_path", nargs="?", help="Path to the input file")
-    parser.add_argument("-p", "--path", help="Path to the input file (alternative to positional argument)")
-    return parser.parse_args()
 
 def main(args):
     # Determine input path
@@ -87,6 +80,8 @@ def main(args):
     print('Proof-object saved in JSON')
 
 if __name__ == "__main__":
-    args = parse_arguments()
+    parser = argparse.ArgumentParser(description="Generate proof after data analysis.")
+    parser.add_argument("input_path", nargs="?", help="Path to the input file")
+    parser.add_argument("-p", "--path", help="Path to the input file (alternative to positional argument)")
+    args = parser.parse_args()
     main(args)
-

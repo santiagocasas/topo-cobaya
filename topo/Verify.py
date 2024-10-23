@@ -1,12 +1,12 @@
-from basic_cryptography import (
+from .basic_cryptography import (
     compute_sha256, get_commit_hash, compute_file_hash, 
     verify_committed_hash, verify_signature_hex,
 )
-from basic_utility import (
+from .basic_utility import (
     load_proof_and_signatures_json, print_in_red,
     remove_keys_recursive, ordered_load, ordered_dump, load_json 
 )
-from analysis import (
+from .analysis import (
     get_commit_hash, compute_analysis_hash, 
     compute_data_dict, process_file_and_verify_roots, 
 )
@@ -18,6 +18,7 @@ import time
 import subprocess
 import copy
 import sys
+import argparse
 
 
 def verify_pre_object(pre_hash, proof, public_key_hex, signature_hex):
@@ -65,7 +66,7 @@ def verify_data(data_hash, input_yaml, proof):
         return False
 
 
-def run_verification(pre_hash, ident, input_yaml, proof, params):
+def run_verification(pre_hash, ident, input_yaml, proof, params, name):
     """
     Executes the verification process and monitors the output in real-time.
     """
@@ -114,9 +115,6 @@ def run_verification(pre_hash, ident, input_yaml, proof, params):
         i = 0
         
         while ((cobaya.poll() is None) or (i == 0)) and ((time_spent < verification_time) or (verification_time < 0)):
-
-            
-            
             #print(file_path)
             if os.path.exists(file_path):
                 if i == 0:
@@ -131,7 +129,7 @@ def run_verification(pre_hash, ident, input_yaml, proof, params):
                         my_art = AsciiArt.from_image(f'topo/asciiart/level_{level-2}.png')
                         my_art.to_terminal(columns=100)
                     except FileNotFoundError:
-                        print(f"Error: The file topo/asciiart/level_{level-2}.png was not found. If you want level-up immages put something there!")
+                        print(f"Error: The file topo/asciiart/level_{level-2}.png was not found. If you want level-up images put something there!")
                     except Exception as e:
                         print(f"An unexpected error occurred: {e}")
                 elif level == 0:
@@ -144,7 +142,7 @@ def run_verification(pre_hash, ident, input_yaml, proof, params):
                         my_art = AsciiArt.from_image(f'topo/asciiart/dead.png')
                         my_art.to_terminal(columns=100)
                     except FileNotFoundError:
-                        print(f"Error: The file topo/asciiart/dead.png was not found. If you want level-up immages put something there!")
+                        print(f"Error: The file topo/asciiart/dead.png was not found. If you want level-up images put something there!")
                     except Exception as e:
                         print(f"An unexpected error occurred: {e}")
                 
@@ -157,7 +155,7 @@ def run_verification(pre_hash, ident, input_yaml, proof, params):
                         my_art = AsciiArt.from_image(f'topo/asciiart/victory.png')
                         my_art.to_terminal(columns=100)
                     except FileNotFoundError:
-                        print(f"Error: The file topo/asciiart/victory.png was not found. If you want level-up immages put something there!")
+                        print(f"Error: The file topo/asciiart/victory.png was not found. If you want level-up images put something there!")
                     except Exception as e:
                         print(f"An unexpected error occurred: {e}")
                 
@@ -177,7 +175,7 @@ def run_verification(pre_hash, ident, input_yaml, proof, params):
                 my_art = AsciiArt.from_image(f'topo/asciiart/level_{level-2}.png')
                 my_art.to_terminal(columns=100)
             except FileNotFoundError:
-                print(f"Error: The file topo/asciiart/level_{level-2}.png was not found. If you want level-up immages put something there!")
+                print(f"Error: The file topo/asciiart/level_{level-2}.png was not found. If you want level-up images put something there!")
             except Exception as e:
                 print(f"An unexpected error occurred: {e}")
         elif level == -1:
@@ -186,7 +184,7 @@ def run_verification(pre_hash, ident, input_yaml, proof, params):
                 my_art = AsciiArt.from_image(f'topo/asciiart/dead.png')
                 my_art.to_terminal(columns=100)
             except FileNotFoundError:
-                print(f"Error: The file topo/asciiart/dead.png was not found. If you want level-up immages put something there!")
+                print(f"Error: The file topo/asciiart/dead.png was not found. If you want level-up images put something there!")
             except Exception as e:
                 print(f"An unexpected error occurred: {e}")
         
@@ -198,27 +196,18 @@ def run_verification(pre_hash, ident, input_yaml, proof, params):
                 my_art = AsciiArt.from_image(f'topo/asciiart/victory.png')
                 my_art.to_terminal(columns=100)
             except FileNotFoundError:
-                print(f"Error: The file topo/asciiart/victory.png was not found. If you want level-up immages put something there!")
+                print(f"Error: The file topo/asciiart/victory.png was not found. If you want level-up images put something there!")
             except Exception as e:
                 print(f"An unexpected error occurred: {e}")
         
         
 
-if __name__ == "__main__":
+def main(args):
+    input_path = args.input_path
+    name = os.path.splitext(os.path.basename(input_path))[0]
+    name = name.split('_', 1)[0]
 
-    try:    
-        input_path = sys.argv[1]  # First argument is expected to be the input file path
-        name = os.path.splitext(os.path.basename(input_path))[0]
-        name = name.split('_', 1)[0]
-
-    except IndexError:
-        print("Please specify the location of the input file.")
-        sys.exit(1)  # Exit with a non-zero status to indicate an error
-
-
-    # Collect any extra arguments beyond the input path
-    extra_args = sys.argv[2:]  
-
+    extra_args = args.extra_args
     params = load_json('topo/params.json')
     
 
@@ -259,6 +248,13 @@ if __name__ == "__main__":
 
     # Step 4: If all verifications passed, proceed with running the analysis
     if run_code:
-        run_verification(pre_hash, ident, input_yaml, proof, params)
+        run_verification(pre_hash, ident, input_yaml, proof, params, name)
     else:
         print('Verification failed: Process aborted.')
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Verify Topo-Cobaya analysis")
+    parser.add_argument("input_path", help="Path to the input file")
+    parser.add_argument("extra_args", nargs="*", help="Extra arguments for verification")
+    args = parser.parse_args()
+    main(args)
