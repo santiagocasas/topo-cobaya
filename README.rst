@@ -68,19 +68,19 @@ Type ``topocobaya -h`` in the command line to see the available commands.
 
                                  ``topocobaya freeze -p scripts/gaussianmix.yaml``
 
-:Run your analysis:
+:Run your analysis:        This creates chains at ``chains/gaussianmix.*``
 
                            ``cobaya-run scripts/gaussianmix.yaml``
 
-:Generate proof of your analysis:
+:Generate proof of your analysis:  *this creates the Merkle tree and the proof object*
 
-                            ``topocobaya proof -p scripts/gaussianmix.yaml``
+                                   ``topocobaya proof -p scripts/gaussianmix.yaml``
 
 :Verify the proof of your analysis:
 
                             ``topocobaya verify -p scripts/gaussianmix.yaml``
 
-**If the verification is successful, you will see the following message: `Full Verfiication completed! sTOPOing cobaya!`**
+If the verification is successful, you will see the following message: *Full Verfiication completed! sTOPOing cobaya!*
 
 
 Verification of an example BAO likelihood MCMC run
