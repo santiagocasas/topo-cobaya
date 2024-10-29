@@ -148,7 +148,7 @@ def run_verification(pre_hash, ident, input_yaml, proof, params, name):
                 
                     return
                 elif level == -99:
-                    print("Full Verfiication completed! Stoppoing cobaya! ")
+                    print("Full Verfiication completed! sTOPOing cobaya! ")
                     cobaya.terminate()  # Use terminate to allow for a graceful shutdown
 
                     try:

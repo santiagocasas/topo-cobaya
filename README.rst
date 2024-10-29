@@ -46,7 +46,7 @@ Topo in Spanish is Mole, which gives the idea of blinding.
 
               ``cobaya-install cosmo -p cosmo/``
 
-:TOPO-Cobaya example likelihood installation:
+:TOPO-Cobaya example likelihood installation of dependencies:
 
               ``cobaya-install --upgrade scripts/BAOs.yaml``
 
@@ -54,6 +54,44 @@ Topo in Spanish is Mole, which gives the idea of blinding.
 
               ``cobaya-run scripts/BAOs.yaml``
 
+:TOPO-Cobaya example likelihood run of Gaussian mixture likelihood:
+
+              ``cobaya-run scripts/gaussianmix.yaml``
+
+*TOPO-Cobaya* example of a successful verification
+==================================================
+
+This section explains how to run and verify an example analysis with TOPO-Cobaya.
+The example run is a simple Gaussian mixture likelihood.
+The script to run this analysis is located at ``scripts/gaussianmix.yaml``.
+It contains a random seed, which is necessary for the verification process to be reproducible.
+
+Type ``topocobaya -h`` in the command line to see the available commands.
+
+:Create a new private key:
+
+              ``topocobaya keygen``
+              ## encrypt your key with a password for more security
+
+:Freeze your analysis pipeline and create a pre-commit object:
+
+              ``topocobaya freeze -p scripts/gaussianmix.yaml``
+
+:Run your analysis:
+
+              ``cobaya-run scripts/gaussianmix.yaml``
+
+:Generate proof of your analysis:
+
+              ``topocobaya proof -p scripts/gaussianmix.yaml``
+
+:Verify the proof of your analysis:
+
+              ``topocobaya verify -p scripts/gaussianmix.yaml``
+
+If the verification is successful, you will see the following message:
+
+              ``Full Verfiication completed! sTOPOing cobaya! ``
 
 
 *Cobaya*, a code for Bayesian analysis in Cosmology
