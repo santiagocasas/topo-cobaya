@@ -64,9 +64,9 @@ Type ``topocobaya -h`` in the command line to see the available commands.
 
                             ``topocobaya keygen``
 
-:Freeze your analysis pipeline and create a pre-commit object:
+:Freeze your analysis pipeline:  *this creates a pre-commit object*
 
-                            ``topocobaya freeze -p scripts/gaussianmix.yaml``
+                                 ``topocobaya freeze -p scripts/gaussianmix.yaml``
 
 :Run your analysis:
 
@@ -80,9 +80,7 @@ Type ``topocobaya -h`` in the command line to see the available commands.
 
                             ``topocobaya verify -p scripts/gaussianmix.yaml``
 
-If the verification is successful, you will see the following message:
-
-                            ``Full Verfiication completed! sTOPOing cobaya! ``
+**If the verification is successful, you will see the following message: `Full Verfiication completed! sTOPOing cobaya!`**
 
 
 Verification of an example BAO likelihood MCMC run
