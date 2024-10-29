@@ -32,8 +32,9 @@ Topo in Spanish is Mole, which gives the idea of blinding.
                ``cd topo-cobaya``
                
                ## Create a new fresh environment and install dependencies
+               ## Make sure your python version is 3.9 or above (if needed, use python3 or python3.9.x in your system)
 
-               ``python -m venv topoenv python=3.9.5``
+               ``python -m venv topoenv``
 
                ``source topoenv/bin/activate``
                
