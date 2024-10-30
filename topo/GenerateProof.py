@@ -37,7 +37,9 @@ def main(args):
     # Display precommitted hash and object for verification
     print("\nPlease verify that this matches your precommitted analysis")
     print(f"Analysis hash: {pre_hash}")
+    print("Please check that your theory codes match the git-versions or update params.json")
     print(pre_object)
+    
 
     # Perform automatic verification of precommitted values
     automatic_check(pre_hash, pre_object, public_key)

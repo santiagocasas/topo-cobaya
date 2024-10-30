@@ -45,7 +45,7 @@ def main(args):
 
     print("\nPublish now, or later if code is still secret")
     print(f"The input file, and the git branch including the versions of installed theory codes")
-    print(f"Those should match these hashes {pre_object}")
+    print(f"Those should match these hashes {pre_object}, please verify that the tehory codes are at the correct version and otherwise update the params.json!")
 
     # Save the pre-object and signatures to a JSON file
     save_proof_and_signatures_json(f'topo/cryptoFiles/pre_object_{pre_hash[:6]}.json', pre_object, signature, None, public_key)
