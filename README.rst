@@ -92,9 +92,13 @@ If the verification is successful, you will see the following message: *Full Ver
 Verification of an example BAO likelihood MCMC run
 ==================================================
 
-:TOPO-Cobaya example likelihood installation of dependencies:                 ``cobaya-install --upgrade scripts/BAOs.yaml``
+:TOPO-Cobaya installation of dependencies:    *for the example BAO likelihood*
 
-:Run previous steps using the same commands as in the previous section with:  ``scripts/BAOs.yaml``
+                                              ``cobaya-install --upgrade scripts/BAOs.yaml``
+
+:Run previous steps using the same commands:  *using this script* 
+
+                                              ``scripts/BAOs.yaml``
 
 
 *Cobaya*, a code for Bayesian analysis in Cosmology

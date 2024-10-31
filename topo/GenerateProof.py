@@ -76,8 +76,9 @@ def main(args):
     print(f"Signature: {signatureB}")
 
     # Save proof object, signatures, and public key to JSON
-    save_proof_and_signatures_json(f'topo/cryptoFiles/proof_object_{pre_hash[:6]}_{ident[:6]}.json', proof_object, signatureA, signatureB, public_key)
-    print('Proof-object saved in JSON')
+    proof_file_name = f'topo/cryptoFiles/proof_object_{pre_hash[:6]}_{ident[:6]}.json'
+    save_proof_and_signatures_json(proof_file_name, proof_object, signatureA, signatureB, public_key)
+    print(f'Proof-object saved in JSON at {proof_file_name}')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate proof after data analysis.")
