@@ -16,10 +16,12 @@ import importlib.util
 import getpass
 
 from .basic_cryptography import (
-    get_commit_hash, compute_sha256, compute_file_hash
+    get_commit_hash, compute_sha256, compute_file_hash,
+    get_commit_hash_from_path
 )
 from .basic_utility import (
-    ordered_load, remove_keys_recursive, print_in_red, find_specific_entries, is_power_of_two, load_proof_and_signatures_json
+    ordered_load, remove_keys_recursive, print_in_red, find_specific_entries, 
+    is_power_of_two, load_proof_and_signatures_json
 )
 
 

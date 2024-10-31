@@ -1,8 +1,9 @@
 {
-    "key_path": "topo/cryptoFiles/private_key_1.txt",
+    "key_path": "topo/cryptoFiles/name_of_your_key.txt",
+    "_comment_code_versions": "The code versions to verify. One can specify either the git hash of the code or the path to the code.",
     "code_versions": {
         "classy": {
-            "hash": "ae99bcea1cd94994228acdfaec70fa8628ae24c5"
+            "hash": "22b49c0af22458a1d8fdf0dd85b5f0840202551b"
         },
         "CAMB": {
             "path": "cosmo/code/CAMB"
