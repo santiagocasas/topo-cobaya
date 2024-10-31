@@ -60,9 +60,15 @@ It contains a random seed, which is necessary for the verification process to be
 
 Type ``topocobaya -h`` in the command line to see the available commands.
 
+:Copy the ``topo/params.json.template`` file to ``topo/params.json`` and modify it to your needs.
+
 :Create a new private key:  *encrypt your key with a password for more security*
 
                             ``topocobaya keygen``
+
+:If you already have a private key:  
+
+                            ``topocobaya keygen --load path/to/your/private_key.txt``
 
 :Freeze your analysis pipeline:  *this creates a pre-commit object*
 

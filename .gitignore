@@ -2,6 +2,8 @@
 topo/cryptoFiles/*
 topo/asciiart/*
 topo/params.json
+chains/Verification*
+scripts/Verification*
 
 # Backups
 *~
