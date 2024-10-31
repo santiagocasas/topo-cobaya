@@ -218,9 +218,6 @@ def main(args):
     pre_object, input_yaml = compute_analysis_hash(input_path,params)
     pre_hash = compute_sha256(str(pre_object).encode()).hex()
 
-    print("Please check that your theory codes match the git-versions or update params.json:")
-    print(pre_object)
-
     # Compute data hashes and run identifier
     seed = input_yaml['sampler']['mcmc']['seed']
     data_dict = compute_data_dict(input_yaml)
