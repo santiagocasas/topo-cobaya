@@ -24,6 +24,7 @@ Topo in Spanish is Mole, which gives the idea of blinding.
 
 :Documentation: Same as Cobaya's documentation, see below.
 :TOPO Documentation: At TOPO's `Github <https://github.com/ChristianFidler/Topo>`_
+:TOPO paper: Time Ordered Provable Outputs `arXiv:2411.00072 <https://arxiv.org/abs/2411.00072>`_
 
 :Installation: Only development mode at the moment.
 
